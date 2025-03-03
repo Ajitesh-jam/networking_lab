@@ -8,7 +8,7 @@
 
 // Global variables
 #define BUFFER_SIZE 1024 // Define BUFFER_SIZE with an appropriate value
-struct KTP_socket *KTP_sockets;
+
 static int send_buffer_size = 0;
 static int send_pointer = 0;
 static int global_error = 0;
@@ -447,11 +447,12 @@ int k_recvfrom(int ktp_sockfd, char *message, int maxSize, int flag, struct sock
     {
         return INVALIDSOCKET;
     }
-    if (KTP_sockets[ktp_sockfd].rwnd.base == KTP_sockets[ktp_sockfd].rwnd.end)
+    while (KTP_sockets[ktp_sockfd].rwnd.base == KTP_sockets[ktp_sockfd].rwnd.end)
     {
         printf("[ERROR] No message available in receive buffer for socket %d\n", ktp_sockfd);
+        sleep(10);
 
-        return -1; // No message available
+        // return -1; // No message available
     }
 
     printf("[RECV] Waiting for message on socket %d (port %d)\n",
@@ -501,3 +502,5 @@ void k_close(int ktp_sockfd, struct sockaddr *dest)
 
     printf("[CLOSE] Socket %d closed\n", ktp_sockfd);
 }
+
+

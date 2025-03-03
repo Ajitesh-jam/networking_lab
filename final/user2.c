@@ -1,16 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include "ktpheader.h"
 
-#define END_MARKER "#"
+#define END_MARKER "d"
 #define BUFFER_SIZE 512
 #define MAX_FILENAME_LENGTH 256
 #define MAX_IP_LENGTH 16
@@ -24,9 +14,6 @@ int main(int argc, char *argv[])
     }
 
     // Initialize KTP protocol
-    initialize();
-
-    sleep(10);
 
     // Validate and copy IP addresses
     char src_ip[MAX_IP_LENGTH];
@@ -74,7 +61,7 @@ int main(int argc, char *argv[])
     if (inet_aton(dest_ip, &servaddr.sin_addr) == 0)
     {
         printf("Error: Invalid destination IP address\n");
-        k_close(ktp_sockfd, NULL);
+        k_close(ktp_sockfd);
         return 1;
     }
 
@@ -84,7 +71,7 @@ int main(int argc, char *argv[])
     if (inet_aton(src_ip, &cliaddr.sin_addr) == 0)
     {
         printf("Error: Invalid source IP address\n");
-        k_close(ktp_sockfd, NULL);
+        k_close(ktp_sockfd);
         return 1;
     }
 
@@ -92,7 +79,7 @@ int main(int argc, char *argv[])
     if (k_bind(ktp_sockfd, (struct sockaddr *)&cliaddr, (struct sockaddr *)&servaddr) < 0)
     {
         printf("Error in binding\n");
-        k_close(ktp_sockfd, NULL);
+        k_close(ktp_sockfd);
         return 1;
     }
 
@@ -109,7 +96,7 @@ int main(int argc, char *argv[])
     if (received < 0)
     {
         printf("Error receiving filename\n");
-        k_close(ktp_sockfd, NULL);
+        k_close(ktp_sockfd);
         return 1;
     }
     buffer[received] = '\0';
@@ -129,7 +116,7 @@ int main(int argc, char *argv[])
         if (fd < 0)
         {
             printf("Error creating output file\n");
-            k_close(ktp_sockfd, NULL);
+            k_close(ktp_sockfd);
             return 1;
         }
         printf("Receiving file: %s\n", filename);
@@ -137,7 +124,7 @@ int main(int argc, char *argv[])
     else
     {
         printf("Invalid file transfer protocol\n");
-        k_close(ktp_sockfd, NULL);
+        k_close(ktp_sockfd);
         return 1;
     }
 
@@ -149,12 +136,12 @@ int main(int argc, char *argv[])
         {
             printf("\nError receiving file data\n");
             close(fd);
-            k_close(ktp_sockfd, NULL);
+            k_close(ktp_sockfd);
             return 1;
         }
         buffer[received] = '\0';
 
-        // Check for end marker
+        // Check for end marker (strict check)
         if (received == 1 && strcmp(buffer, END_MARKER) == 0)
         {
             break;
@@ -165,7 +152,7 @@ int main(int argc, char *argv[])
         {
             printf("\nError writing to file\n");
             close(fd);
-            k_close(ktp_sockfd, NULL);
+            k_close(ktp_sockfd);
             return 1;
         }
 
@@ -178,6 +165,6 @@ int main(int argc, char *argv[])
     printf("Total bytes received: %d\n", total_bytes);
 
     close(fd);
-    k_close(ktp_sockfd, NULL);
+    k_close(ktp_sockfd);
     return 0;
 }
